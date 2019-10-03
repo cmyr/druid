@@ -5,10 +5,11 @@ name: /bloat command
 
 jobs:
   check_comment:
-    runs-on: ubuntu-latest
+    runs-on: macos-10.14
     name: bloat comment
     if: startsWith(github.event.comment.body, '/bloat')
     steps:
+      - run: brew install cairo
       - run: mkdir '.bloatcmp'
       - uses: actions/checkout@v1
         with:
@@ -43,14 +44,3 @@ jobs:
         with:
           bloat_stats: ${{ steps.bloatcmp.outputs.bloat_stats }}
           myToken: ${{ secrets.GITHUB_TOKEN }}
-
-
-       #ls -l target/debug/examples | awk '{print $9 "\t" $5}' | rg --invert-match "[\.-]" | sort
-      #- name: Checkout
-        #uses: actions/checkout@v1
-      #- name: Write file one
-        #run: echo 'hello 123456' > '.bloatcmp/old.txt'
-        #shell: bash
-      #- name: Write file two
-        #run: echo 'hello 125456' > '.bloatcmp/new.txt'
-        #shell: bash
