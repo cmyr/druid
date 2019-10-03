@@ -1,46 +1,62 @@
 on:
+  push:
+  pull_request:
   issue_comment:
     types: [created, edited]
-name: /bloat command
+name: bloat check
 
 jobs:
   check_comment:
     runs-on: macos-10.14
     name: bloat comment
-    if: startsWith(github.event.comment.body, '/bloat')
+    if: (!startsWith(github.eventName, 'issue_comment') || startsWith(github.event.comment.body, '/bloat'))
     steps:
       - run: brew install cairo
-      - run: mkdir '.bloatcmp'
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
       - uses: actions/checkout@v1
         with:
             ref: master
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
       - uses: actions-rs/cargo@v1
         with:
-          command: build --release --examples
-      - run: |
-           ls -l target/release/examples | awk '{print $9 "\t" $5}' | grep --invert-match "[\.-]" > ".bloatcmp/old.txt"
-        shell: bash
+          command: build
+          args: --release --examples
+      - name: get old sizes
+        id: old
+        uses: cmyr/bloat-cmp/get-sizes@master
+        with:
+          paths: >
+            target/release/examples/calc
+            target/release/examples/scroll_colors
+            target/release/examples/multiwin
+            target/release/examples/textbox
+            target/release/examples/custom_widget
+      - run: rm -rf target/release/examples
       - uses: actions/checkout@v1
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
       - uses: actions-rs/cargo@v1
         with:
-          command: build --release --examples
-      - name: Dump file sizes
-        run: |
-           ls -l target/release/examples | awk '{print $9 "\t" $5}' | grep --invert-match "[\.-]" > ".bloatcmp/new.txt"
-        shell: bash
-      - name: compare
-        uses: cmyr/bloat-cmp/compare@mater
-        id: bloatcmp
-      - name: comment
-        uses: cmyr/bloat-cmp/reply-to-pr-comment@master
+          command: build
+          args: --release --examples
+      - name: get new sizes
+        id: new
+        uses: cmyr/bloat-cmp/get-sizes@master
         with:
-          bloat_stats: ${{ steps.bloatcmp.outputs.bloat_stats }}
+          paths: >
+            target/release/examples/calc
+            target/release/examples/scroll_colors
+            target/release/examples/multiwin
+            target/release/examples/textbox
+            target/release/examples/custom_widget
+      - name: compare
+        id: bloatcmp
+        uses: cmyr/bloat-cmp/compare@master
+        with:
+            old: ${{ steps.old.outputs.rawSizes }}
+            new: ${{ steps.new.outputs.rawSizes }}
+      - name: comment
+        uses: cmyr/bloat-cmp/post-comment@master
+        with:
+          stats: ${{ steps.bloatcmp.outputs.stats }}
           myToken: ${{ secrets.GITHUB_TOKEN }}
