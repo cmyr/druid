@@ -18,8 +18,8 @@ use std::time::Duration;
 
 use crate::widget::prelude::*;
 use crate::{
-    Application, ArcStr, BoxConstraints, Cursor, Data, Env, FontDescriptor, HotKey, KbKey,
-    KeyOrValue, Selector, SysMods, TimerToken,
+    Application, ArcStr, BoxConstraints, Cursor, Env, FontDescriptor, HotKey, KbKey, KeyOrValue,
+    Selector, SysMods, TimerToken,
 };
 
 use crate::kurbo::{Affine, Insets, Point, Size};
@@ -27,7 +27,7 @@ use crate::theme;
 
 use crate::text::{
     movement, offset_for_delete_backwards, BasicTextInput, EditAction, EditableText, MouseAction,
-    Movement, Selection, TextInput, TextLayout,
+    Movement, Selection, TextInput, TextLayout, TextStorage,
 };
 
 const BORDER_WIDTH: f64 = 1.;
@@ -39,8 +39,8 @@ const CURSOR_BLINK_DURATION: Duration = Duration::from_millis(500);
 
 /// A widget that allows user text input.
 #[derive(Debug, Clone)]
-pub struct TextBox {
-    text: TextLayout<ArcStr>,
+pub struct TextBox<T> {
+    text: TextLayout<T>,
     placeholder: TextLayout<ArcStr>,
     width: f64,
     hscroll_offset: f64,
@@ -49,13 +49,15 @@ pub struct TextBox {
     cursor_on: bool,
 }
 
-impl TextBox {
+impl TextBox<()> {
     /// Perform an `EditAction`. The payload *must* be an `EditAction`.
     pub const PERFORM_EDIT: Selector<EditAction> =
         Selector::new("druid-builtin.textbox.perform-edit");
+}
 
+impl<T: TextStorage + EditableText> TextBox<T> {
     /// Create a new TextBox widget
-    pub fn new() -> TextBox {
+    pub fn new() -> Self {
         let text = TextLayout::new();
         let mut placeholder = TextLayout::new();
         placeholder.set_text_color(theme::PLACEHOLDER_COLOR);
@@ -126,7 +128,7 @@ impl TextBox {
 
     /// Insert text at the cursor position.
     /// Replaces selected text if there's a selection.
-    fn insert(&mut self, src: &mut String, new: &str) {
+    fn insert(&mut self, src: &mut T, new: &str) {
         // EditableText's edit method will panic if selection is greater than
         // src length, hence we try to constrain it.
         //
@@ -140,7 +142,7 @@ impl TextBox {
 
     /// Set the selection to be a caret at the given offset, if that's a valid
     /// codepoint boundary.
-    fn caret_to(&mut self, text: &mut String, to: usize) {
+    fn caret_to(&mut self, text: &mut T, to: usize) {
         match text.cursor(to) {
             Some(_) => self.selection = Selection::caret(to),
             None => log::error!("You can't move the cursor there."),
@@ -153,7 +155,7 @@ impl TextBox {
         self.selection.end
     }
 
-    fn do_edit_action(&mut self, edit_action: EditAction, text: &mut String) {
+    fn do_edit_action(&mut self, edit_action: EditAction, text: &mut T) {
         match edit_action {
             EditAction::Insert(chars) | EditAction::Paste(chars) => self.insert(text, &chars),
             EditAction::Backspace => self.delete_backward(text),
@@ -181,7 +183,7 @@ impl TextBox {
     }
 
     /// Edit a selection using a `Movement`.
-    fn move_selection(&mut self, mvmnt: Movement, text: &mut String, modify: bool) {
+    fn move_selection(&mut self, mvmnt: Movement, text: &mut T, modify: bool) {
         // This movement function should ensure all movements are legit.
         // If they aren't, that's a problem with the movement function.
         self.selection = movement(mvmnt, self.selection, text, modify);
@@ -189,7 +191,7 @@ impl TextBox {
 
     /// Delete to previous grapheme if in caret mode.
     /// Otherwise just delete everything inside the selection.
-    fn delete_backward(&mut self, text: &mut String) {
+    fn delete_backward(&mut self, text: &mut T) {
         if self.selection.is_caret() {
             let cursor = self.cursor();
             let new_cursor = offset_for_delete_backwards(&self.selection, text);
@@ -201,7 +203,7 @@ impl TextBox {
         }
     }
 
-    fn delete_forward(&mut self, text: &mut String) {
+    fn delete_forward(&mut self, text: &mut T) {
         if self.selection.is_caret() {
             // Never touch the characters before the cursor.
             if text.next_grapheme_offset(self.cursor()).is_some() {
@@ -262,8 +264,8 @@ impl TextBox {
     }
 }
 
-impl Widget<String> for TextBox {
-    fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut String, env: &Env) {
+impl<T: EditableText + TextStorage> Widget<T> for TextBox<T> {
+    fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut T, env: &Env) {
         // Guard against external changes in data?
         self.selection = self.selection.constrain_to(data);
         let mut edit_action = None;
@@ -369,7 +371,7 @@ impl Widget<String> for TextBox {
             if data.is_empty() {
                 self.selection = Selection::caret(0);
             } else {
-                self.text.set_text(data.as_str().into());
+                self.text.set_text(data.to_owned());
             }
             self.text.rebuild_if_needed(ctx.text(), env);
 
@@ -379,11 +381,11 @@ impl Widget<String> for TextBox {
         }
     }
 
-    fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &String, env: &Env) {
+    fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
         match event {
             LifeCycle::WidgetAdded => {
                 ctx.register_for_focus();
-                self.text.set_text(data.as_str().into());
+                self.text.set_text(data.to_owned());
                 self.text.rebuild_if_needed(ctx.text(), env);
                 self.placeholder.rebuild_if_needed(ctx.text(), env);
             }
@@ -393,11 +395,11 @@ impl Widget<String> for TextBox {
         }
     }
 
-    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &String, data: &String, _env: &Env) {
+    fn update(&mut self, ctx: &mut UpdateCtx, old_data: &T, data: &T, _env: &Env) {
         // setting text color rebuilds layout, so don't do it if we don't have to
         if !old_data.same(data) {
             self.selection = self.selection.constrain_to(data);
-            self.text.set_text(data.as_str().into());
+            self.text.set_text(data.to_owned());
             ctx.request_layout();
         }
 
@@ -406,25 +408,18 @@ impl Widget<String> for TextBox {
         }
     }
 
-    fn layout(
-        &mut self,
-        ctx: &mut LayoutCtx,
-        bc: &BoxConstraints,
-        data: &String,
-        env: &Env,
-    ) -> Size {
-        let layout = if data.is_empty() {
-            &mut self.placeholder
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+        let text_metrics = if data.is_empty() {
+            self.placeholder.rebuild_if_needed(ctx.text(), env);
+            self.placeholder.size()
         } else {
-            &mut self.text
+            self.text.rebuild_if_needed(ctx.text(), env);
+            self.text.size()
         };
-
-        layout.rebuild_if_needed(ctx.text(), env);
 
         let width = env.get(theme::WIDE_WIDGET_WIDTH);
         let min_height = env.get(theme::BORDERED_WIDGET_HEIGHT);
 
-        let text_metrics = layout.size();
         let text_height = text_metrics.height + TEXT_INSETS.y_value();
         let height = text_height.max(min_height);
 
@@ -433,7 +428,7 @@ impl Widget<String> for TextBox {
         size
     }
 
-    fn paint(&mut self, ctx: &mut PaintCtx, data: &String, env: &Env) {
+    fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
         // Guard against changes in data following `event`
         self.selection = self.selection.constrain_to(data);
 
@@ -461,14 +456,18 @@ impl Widget<String> for TextBox {
         // Render text, selection, and cursor inside a clip
         ctx.with_save(|rc| {
             rc.clip(clip_rect);
-            let layout = if data.is_empty() {
-                &self.placeholder
-            } else {
-                &self.text
-            };
+            //let layout = if data.is_empty() {
+            //&self.placeholder
+            //} else {
+            //&self.text
+            //};
 
             // Calculate layout
-            let text_size = layout.size();
+            let text_size = if data.is_empty() {
+                self.placeholder.size()
+            } else {
+                self.text.size()
+            };
 
             // Shift everything inside the clip by the hscroll_offset
             rc.transform(Affine::translate((-self.hscroll_offset, 0.)));
@@ -478,19 +477,24 @@ impl Widget<String> for TextBox {
             let text_pos = Point::new(TEXT_INSETS.x0, TEXT_INSETS.y0 + extra_padding);
 
             // Draw selection rect
-            if !self.selection.is_caret() {
-                for sel in layout.rects_for_range(self.selection.range()) {
+            if !data.is_empty() && !self.selection.is_caret() {
+                for sel in self.text.rects_for_range(self.selection.range()) {
                     let sel = sel + text_pos.to_vec2();
                     let rounded = sel.to_rounded_rect(1.0);
                     rc.fill(rounded, &selection_color);
                 }
             }
 
-            layout.draw(rc, text_pos);
+            if data.is_empty() {
+                self.placeholder.draw(rc, text_pos);
+            } else {
+                self.text.draw(rc, text_pos);
+            }
+            //layout.draw(rc, text_pos);
 
             // Paint the cursor if focused and there's no selection
             if is_focused && self.cursor_on {
-                let line = layout.cursor_line_for_text_position(self.cursor());
+                let line = self.text.cursor_line_for_text_position(self.cursor());
                 let line = line + text_pos.to_vec2();
                 rc.stroke(line, &cursor_color, 1.);
             }
@@ -501,7 +505,7 @@ impl Widget<String> for TextBox {
     }
 }
 
-impl Default for TextBox {
+impl<T: TextStorage + EditableText> Default for TextBox<T> {
     fn default() -> Self {
         TextBox::new()
     }

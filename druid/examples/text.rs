@@ -14,6 +14,9 @@
 
 //! An example of various text layout features.
 
+use pulldown_cmark::{Event, Parser};
+use std::sync::Arc;
+
 use druid::piet::{PietTextLayoutBuilder, TextStorage as PietTextStorage};
 use druid::text::{Attribute, RichText, TextStorage};
 use druid::widget::prelude::*;
@@ -25,14 +28,14 @@ use druid::{
 
 const WINDOW_TITLE: LocalizedString<AppState> = LocalizedString::new("Text Options");
 
-const TEXT: &str = r#"Contrary to what we would like to believe, there is no such thing as a structureless group. Any group of people of whatever nature that comes together for any length of time for any purpose will inevitably structure itself in some fashion. The structure may be flexible; it may vary over time; it may evenly or unevenly distribute tasks, power and resources over the members of the group. But it will be formed regardless of the abilities, personalities, or intentions of the people involved. The very fact that we are individuals, with different talents, predispositions, and backgrounds makes this inevitable. Only if we refused to relate or interact on any basis whatsoever could we approximate structurelessness -- and that is not the nature of a human group.
-This means that to strive for a structureless group is as useful, and as deceptive, as to aim at an "objective" news story, "value-free" social science, or a "free" economy. A "laissez faire" group is about as realistic as a "laissez faire" society; the idea becomes a smokescreen for the strong or the lucky to establish unquestioned hegemony over others. This hegemony can be so easily established because the idea of "structurelessness" does not prevent the formation of informal structures, only formal ones. Similarly "laissez faire" philosophy did not prevent the economically powerful from establishing control over wages, prices, and distribution of goods; it only prevented the government from doing so. Thus structurelessness becomes a way of masking power, and within the women's movement is usually most strongly advocated by those who are the most powerful (whether they are conscious of their power or not). As long as the structure of the group is informal, the rules of how decisions are made are known only to a few and awareness of power is limited to those who know the rules. Those who do not know the rules and are not chosen for initiation must remain in confusion, or suffer from paranoid delusions that something is happening of which they are not quite aware."#;
+const TEXT: &str = r#"*Hello* ***world***"#;
 
 const SPACER_SIZE: f64 = 8.0;
 
 #[derive(Clone, Data, Lens)]
 struct AppState {
-    text: RichText,
+    raw: Arc<String>,
+    rendered: RichText,
     line_break_mode: LineBreaking,
     alignment: TextAlignment,
 }
@@ -42,13 +45,13 @@ struct AppState {
 //have access to the other fields.
 impl PietTextStorage for AppState {
     fn as_str(&self) -> &str {
-        self.text.as_str()
+        self.rendered.as_str()
     }
 }
 
 impl TextStorage for AppState {
     fn add_attributes(&self, builder: PietTextLayoutBuilder, env: &Env) -> PietTextLayoutBuilder {
-        self.text.add_attributes(builder, env)
+        self.rendered.add_attributes(builder, env)
     }
 }
 
@@ -83,6 +86,7 @@ pub fn main() {
         .title(WINDOW_TITLE)
         .window_size((400.0, 600.0));
 
+    let raw = Arc::new(TEXT.to_owned());
     let text = RichText::new(TEXT.into())
         .with_attribute(0..9, Attribute::text_color(Color::rgb(1.0, 0.2, 0.1)))
         .with_attribute(0..9, Attribute::size(24.0))
@@ -93,9 +97,10 @@ pub fn main() {
 
     // create the initial app state
     let initial_state = AppState {
+        raw,
+        rendered: text,
         line_break_mode: LineBreaking::Clip,
         alignment: Default::default(),
-        text,
     };
 
     // start the application
@@ -149,4 +154,16 @@ fn build_root_widget() -> impl Widget<AppState> {
         .cross_axis_alignment(druid::widget::CrossAxisAlignment::Start)
         .with_child(controls)
         .with_flex_child(label, 1.0)
+}
+
+fn rebuild_rendered_text(text: &str) -> RichText {
+    //let mut rich = RichText::new(text.into());
+    let parser = Parser::new(text);
+    for event in parser {
+        //match event {
+        //Event::
+
+        //}
+    }
+    unimplemented!()
 }
