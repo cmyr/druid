@@ -116,7 +116,7 @@ impl<W: Widget<State>> Widget<State> for Glow<W> {
         bc: &BoxConstraints,
         data: &State,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         self.inner.layout(ctx, bc, data, env)
     }
 

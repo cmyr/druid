@@ -289,11 +289,11 @@ impl<SP: ScopePolicy, W: Widget<SP::State>> Widget<SP::In> for Scope<SP, W> {
         bc: &BoxConstraints,
         data: &SP::In,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         self.with_state(data, |state, inner| {
-            let size = inner.layout(ctx, bc, state, env);
-            inner.set_layout_rect(ctx, state, env, size.to_rect());
-            size
+            let layout = inner.layout(ctx, bc, state, env);
+            inner.set_layout_rect(ctx, state, env, layout.size().to_rect());
+            layout
         })
     }
 

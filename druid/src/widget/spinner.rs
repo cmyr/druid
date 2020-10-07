@@ -87,22 +87,17 @@ impl<T: Data> Widget<T> for Spinner {
 
     fn update(&mut self, _ctx: &mut UpdateCtx, _old_data: &T, _data: &T, _env: &Env) {}
 
-    fn layout(
-        &mut self,
-        _layout_ctx: &mut LayoutCtx,
-        bc: &BoxConstraints,
-        _data: &T,
-        env: &Env,
-    ) -> Size {
+    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _d: &T, env: &Env) -> Layout {
         bc.debug_check("Spinner");
 
         if bc.is_width_bounded() && bc.is_height_bounded() {
-            bc.max()
+            bc.max().into()
         } else {
             bc.constrain(Size::new(
                 env.get(theme::BASIC_WIDGET_HEIGHT),
                 env.get(theme::BASIC_WIDGET_HEIGHT),
             ))
+            .into()
         }
     }
 

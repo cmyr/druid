@@ -142,7 +142,7 @@ impl<T: Data> Widget<T> for Image {
         bc: &BoxConstraints,
         _data: &T,
         _env: &Env,
-    ) -> Size {
+    ) -> Layout {
         bc.debug_check("Image");
 
         // If either the width or height is constrained calculate a value so that the image fits
@@ -152,12 +152,12 @@ impl<T: Data> Widget<T> for Image {
         let image_size = self.image_data.size();
         if bc.is_width_bounded() && !bc.is_height_bounded() {
             let ratio = max.width / image_size.width;
-            Size::new(max.width, ratio * image_size.height)
+            Size::new(max.width, ratio * image_size.height).into()
         } else if bc.is_height_bounded() && !bc.is_width_bounded() {
             let ratio = max.height / image_size.height;
-            Size::new(ratio * image_size.width, max.height)
+            Size::new(ratio * image_size.width, max.height).into()
         } else {
-            bc.constrain(self.image_data.size())
+            bc.constrain(self.image_data.size()).into()
         }
     }
 

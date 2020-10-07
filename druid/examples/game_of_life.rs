@@ -288,17 +288,14 @@ impl Widget<AppData> for GameOfLifeWidget {
 
     fn layout(
         &mut self,
-        _layout_ctx: &mut LayoutCtx,
+        _ctx: &mut LayoutCtx,
         bc: &BoxConstraints,
         _data: &AppData,
         _env: &Env,
-    ) -> Size {
+    ) -> Layout {
         let max_size = bc.max();
         let min_side = max_size.height.min(max_size.width);
-        Size {
-            width: min_side,
-            height: min_side,
-        }
+        Layout::new((min_side, min_side))
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &AppData, _env: &Env) {

@@ -79,17 +79,17 @@ impl<T: Data> Widget<T> for Svg {
 
     fn layout(
         &mut self,
-        _layout_ctx: &mut LayoutCtx,
+        _ctx: &mut LayoutCtx,
         bc: &BoxConstraints,
         _data: &T,
         _env: &Env,
-    ) -> Size {
+    ) -> Layout {
         bc.debug_check("SVG");
 
         if bc.is_width_bounded() {
-            bc.max()
+            bc.max().into()
         } else {
-            bc.constrain(self.get_size())
+            bc.constrain(self.get_size()).into()
         }
     }
     fn paint(&mut self, ctx: &mut PaintCtx, _data: &T, _env: &Env) {

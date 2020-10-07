@@ -602,7 +602,7 @@ impl<T: Data> Widget<T> for Flex<T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         bc.debug_check("Flex");
         // we loosen our constraints when passing to children.
         let loosened_bc = bc.loosen();
@@ -615,7 +615,8 @@ impl<T: Data> Widget<T> for Flex<T> {
                 let child_bc = self
                     .direction
                     .constraints(&loosened_bc, 0., std::f64::INFINITY);
-                let child_size = child.widget.layout(ctx, &child_bc, data, env);
+                let child_layout = child.widget.layout(ctx, &child_bc, data, env);
+                let child_size = child_layout.size();
 
                 if child_size.width.is_infinite() {
                     log::warn!("A non-Flex child has an infinite width.");
@@ -628,8 +629,9 @@ impl<T: Data> Widget<T> for Flex<T> {
                 major_non_flex += self.direction.major(child_size).expand();
                 minor = minor.max(self.direction.minor(child_size).expand());
                 // Stash size.
-                let rect = child_size.to_rect();
-                child.widget.set_layout_rect(ctx, data, env, rect);
+                child
+                    .widget
+                    .set_layout_rect(ctx, data, env, child_size.to_rect());
             }
         }
 
@@ -650,7 +652,8 @@ impl<T: Data> Widget<T> for Flex<T> {
                 let child_bc = self
                     .direction
                     .constraints(&loosened_bc, min_major, actual_major);
-                let child_size = child.widget.layout(ctx, &child_bc, data, env);
+                let child_layout = child.widget.layout(ctx, &child_bc, data, env);
+                let child_size = child_layout.size();
 
                 major_flex += self.direction.major(child_size).expand();
                 minor = minor.max(self.direction.minor(child_size).expand());
@@ -711,7 +714,7 @@ impl<T: Data> Widget<T> for Flex<T> {
         let my_bounds = Rect::ZERO.with_size(my_size);
         let insets = child_paint_rect - my_bounds;
         ctx.set_paint_insets(insets);
-        my_size
+        Layout::new(my_size)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
@@ -833,9 +836,9 @@ impl<T: Data> Widget<T> for Spacer {
     fn event(&mut self, _: &mut EventCtx, _: &Event, _: &mut T, _: &Env) {}
     fn lifecycle(&mut self, _: &mut LifeCycleCtx, _: &LifeCycle, _: &T, _: &Env) {}
     fn update(&mut self, _: &mut UpdateCtx, _: &T, _: &T, _: &Env) {}
-    fn layout(&mut self, _: &mut LayoutCtx, _: &BoxConstraints, _: &T, env: &Env) -> Size {
+    fn layout(&mut self, _: &mut LayoutCtx, _: &BoxConstraints, _: &T, env: &Env) -> Layout {
         let major = self.len.resolve(env);
-        self.axis.pack(major, 0.0).into()
+        Layout::new(self.axis.pack(major, 0.0))
     }
     fn paint(&mut self, _: &mut PaintCtx, _: &T, _: &Env) {}
 }

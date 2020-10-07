@@ -109,7 +109,7 @@ impl Widget<AppState> for Rebuilder {
         bc: &BoxConstraints,
         data: &AppState,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         self.inner.layout(ctx, bc, data, env)
     }
 

@@ -145,7 +145,7 @@ impl<T: Data> Widget<T> for Container<T> {
         self.inner.update(ctx, data, env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         bc.debug_check("Container");
 
         // Shrink constraints by border offset
@@ -154,7 +154,8 @@ impl<T: Data> Widget<T> for Container<T> {
             None => 0.0,
         };
         let child_bc = bc.shrink((2.0 * border_width, 2.0 * border_width));
-        let size = self.inner.layout(ctx, &child_bc, data, env);
+        let layout = self.inner.layout(ctx, &child_bc, data, env);
+        let size = layout.size();
         let origin = Point::new(border_width, border_width);
         self.inner
             .set_layout_rect(ctx, data, env, Rect::from_origin_size(origin, size));
@@ -166,7 +167,7 @@ impl<T: Data> Widget<T> for Container<T> {
 
         let my_insets = self.inner.compute_parent_paint_insets(my_size);
         ctx.set_paint_insets(my_insets);
-        my_size
+        Layout::new(my_size)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

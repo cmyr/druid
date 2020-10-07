@@ -71,8 +71,8 @@ fn invalidate_scroll() {
 
         fn lifecycle(&mut self, _: &mut LifeCycleCtx, _: &LifeCycle, _: &T, _: &Env) {}
         fn update(&mut self, _: &mut UpdateCtx, _: &T, _: &T, _: &Env) {}
-        fn layout(&mut self, _: &mut LayoutCtx, _: &BoxConstraints, _: &T, _: &Env) -> Size {
-            Size::new(1000., 1000.)
+        fn layout(&mut self, _: &mut LayoutCtx, _: &BoxConstraints, _: &T, _: &Env) -> Layout {
+            Layout::new((1000., 1000.))
         }
 
         fn paint(&mut self, ctx: &mut PaintCtx, _: &T, _: &Env) {

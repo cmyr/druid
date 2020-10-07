@@ -129,7 +129,7 @@ impl<T: Data, W: Widget<T>> Widget<T> for Scroll<T, W> {
         self.child.update(ctx, data, env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         bc.debug_check("Scroll");
 
         let max_bc = match self.direction {
@@ -139,7 +139,8 @@ impl<T: Data, W: Widget<T>> Widget<T> for Scroll<T, W> {
         };
 
         let child_bc = BoxConstraints::new(Size::ZERO, max_bc);
-        let child_size = self.child.layout(ctx, &child_bc, data, env);
+        let child_layout = self.child.layout(ctx, &child_bc, data, env);
+        let child_size = child_layout.size();
         log_size_warnings(child_size);
         let old_size = self.scroll_component.content_size;
         self.scroll_component.content_size = child_size;
@@ -155,7 +156,7 @@ impl<T: Data, W: Widget<T>> Widget<T> for Scroll<T, W> {
                 .reset_scrollbar_fade(|d| ctx.request_timer(d), env);
         }
 
-        self_size
+        Layout::new(self_size)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

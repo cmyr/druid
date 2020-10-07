@@ -76,15 +76,16 @@ impl<T: Data, W: Widget<T>> Widget<T> for EnvScope<T, W> {
         self.child.update(ctx, data, &new_env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         bc.debug_check("EnvScope");
 
         let mut new_env = env.clone();
         (self.f)(&mut new_env, &data);
 
-        let size = self.child.layout(ctx, &bc, data, &new_env);
+        let layout = self.child.layout(ctx, &bc, data, &new_env);
+        let size = layout.size();
         self.child.set_layout_rect(ctx, data, env, size.to_rect());
-        size
+        layout
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

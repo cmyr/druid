@@ -86,7 +86,7 @@ fn simple_paint_rect() {
         .layout_fn(|_, ctx, bc, _, _| {
             // this widget paints twenty points above below its layout bounds
             ctx.set_paint_insets(Insets::uniform_xy(0., 20.));
-            bc.max()
+            bc.max().into()
         })
         .with_id(id1)
         .fix_size(100., 100.)
@@ -133,7 +133,7 @@ fn flex_paint_rect_overflow() {
             ModularWidget::new(())
                 .layout_fn(|_, ctx, bc, _, _| {
                     ctx.set_paint_insets(Insets::new(20., 0., 0., 0.));
-                    bc.constrain(Size::new(10., 10.))
+                    bc.constrain(Size::new(10., 10.)).into()
                 })
                 .expand(),
             1.0,
@@ -142,7 +142,7 @@ fn flex_paint_rect_overflow() {
             ModularWidget::new(())
                 .layout_fn(|_, ctx, bc, _, _| {
                     ctx.set_paint_insets(Insets::new(0., 20., 0., 0.));
-                    bc.constrain(Size::new(10., 10.))
+                    bc.constrain(Size::new(10., 10.)).into()
                 })
                 .expand(),
             1.0,
@@ -151,7 +151,7 @@ fn flex_paint_rect_overflow() {
             ModularWidget::new(())
                 .layout_fn(|_, ctx, bc, _, _| {
                     ctx.set_paint_insets(Insets::new(0., 0., 0., 20.));
-                    bc.constrain(Size::new(10., 10.))
+                    bc.constrain(Size::new(10., 10.)).into()
                 })
                 .expand(),
             1.0,
@@ -160,7 +160,7 @@ fn flex_paint_rect_overflow() {
             ModularWidget::new(())
                 .layout_fn(|_, ctx, bc, _, _| {
                     ctx.set_paint_insets(Insets::new(0., 0., 20., 0.));
-                    bc.constrain(Size::new(10., 10.))
+                    bc.constrain(Size::new(10., 10.)).into()
                 })
                 .expand(),
             1.0,

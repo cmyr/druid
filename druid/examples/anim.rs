@@ -46,14 +46,8 @@ impl Widget<u32> for AnimWidget {
 
     fn update(&mut self, _ctx: &mut UpdateCtx, _old_data: &u32, _data: &u32, _env: &Env) {}
 
-    fn layout(
-        &mut self,
-        _layout_ctx: &mut LayoutCtx,
-        bc: &BoxConstraints,
-        _data: &u32,
-        _env: &Env,
-    ) -> Size {
-        bc.constrain((100.0, 100.0))
+    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _: &u32, _: &Env) -> Layout {
+        bc.constrain((100.0, 100.0)).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, _data: &u32, _env: &Env) {

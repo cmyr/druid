@@ -492,7 +492,7 @@ impl<T: Data> Widget<T> for Label<T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, env: &Env) -> Layout {
         self.label.layout(ctx, bc, &self.current_text, env)
     }
 
@@ -522,7 +522,7 @@ impl<T: TextStorage> Widget<T> for RawLabel<T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, env: &Env) -> Layout {
         bc.debug_check("Label");
 
         let width = match self.line_break_mode {
@@ -535,7 +535,7 @@ impl<T: TextStorage> Widget<T> for RawLabel<T> {
 
         let mut text_size = self.layout.size();
         text_size.width += 2. * LABEL_X_PADDING;
-        bc.constrain(text_size)
+        bc.constrain(text_size).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, _data: &T, _env: &Env) {

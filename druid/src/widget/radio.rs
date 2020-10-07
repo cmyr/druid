@@ -94,10 +94,11 @@ impl<T: Data + PartialEq> Widget<T> for Radio<T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         bc.debug_check("Radio");
 
-        let label_size = self.child_label.layout(ctx, &bc, data, env);
+        let label_layout = self.child_label.layout(ctx, &bc, data, env);
+        let label_size = label_layout.size();
         let radio_diam = env.get(theme::BASIC_WIDGET_HEIGHT);
         let x_padding = env.get(theme::WIDGET_CONTROL_COMPONENT_PADDING);
 
@@ -105,7 +106,7 @@ impl<T: Data + PartialEq> Widget<T> for Radio<T> {
             label_size.width + radio_diam + x_padding,
             radio_diam.max(label_size.height),
         );
-        bc.constrain(desired_size)
+        Layout::new(bc.constrain(desired_size))
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

@@ -25,7 +25,7 @@ use crate::*;
 pub type EventFn<S, T> = dyn FnMut(&mut S, &mut EventCtx, &Event, &mut T, &Env);
 pub type LifeCycleFn<S, T> = dyn FnMut(&mut S, &mut LifeCycleCtx, &LifeCycle, &T, &Env);
 pub type UpdateFn<S, T> = dyn FnMut(&mut S, &mut UpdateCtx, &T, &T, &Env);
-pub type LayoutFn<S, T> = dyn FnMut(&mut S, &mut LayoutCtx, &BoxConstraints, &T, &Env) -> Size;
+pub type LayoutFn<S, T> = dyn FnMut(&mut S, &mut LayoutCtx, &BoxConstraints, &T, &Env) -> Layout;
 pub type PaintFn<S, T> = dyn FnMut(&mut S, &mut PaintCtx, &T, &Env);
 
 pub const REPLACE_CHILD: Selector = Selector::new("druid-test.replace-child");
@@ -79,7 +79,7 @@ pub enum Record {
     E(Event),
     /// A `LifeCycle` event.
     L(LifeCycle),
-    Layout(Size),
+    Layout(Layout),
     Update(Region),
     Paint,
     // instead of always returning an Option<Record>, we have a none variant;
@@ -139,7 +139,7 @@ impl<S, T> ModularWidget<S, T> {
 
     pub fn layout_fn(
         mut self,
-        f: impl FnMut(&mut S, &mut LayoutCtx, &BoxConstraints, &T, &Env) -> Size + 'static,
+        f: impl FnMut(&mut S, &mut LayoutCtx, &BoxConstraints, &T, &Env) -> Layout + 'static,
     ) -> Self {
         self.layout = Some(Box::new(f));
         self
@@ -170,7 +170,7 @@ impl<S, T: Data> Widget<T> for ModularWidget<S, T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         let ModularWidget {
             ref mut state,
             ref mut layout,
@@ -179,7 +179,7 @@ impl<S, T: Data> Widget<T> for ModularWidget<S, T> {
         layout
             .as_mut()
             .map(|f| f(state, ctx, bc, data, env))
-            .unwrap_or_else(|| Size::new(100., 100.))
+            .unwrap_or_else(|| Layout::new((100., 100.)))
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
@@ -220,7 +220,7 @@ impl<T: Data> Widget<T> for ReplaceChild<T> {
         self.inner.update(ctx, data, env)
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         self.inner.layout(ctx, bc, data, env)
     }
 
@@ -291,7 +291,7 @@ impl<T: Data, W: Widget<T>> Widget<T> for Recorder<W> {
             .push(Record::Update(ctx.widget_state.invalid.clone()));
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         let size = self.inner.layout(ctx, bc, data, env);
         self.recording.push(Record::Layout(size));
         size

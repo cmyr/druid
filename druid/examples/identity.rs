@@ -33,8 +33,8 @@ use std::time::Duration;
 use druid::kurbo::RoundedRect;
 use druid::widget::{Button, CrossAxisAlignment, Flex, WidgetId};
 use druid::{
-    AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, LayoutCtx, Lens, LifeCycle,
-    LifeCycleCtx, LocalizedString, PaintCtx, Rect, RenderContext, Selector, Size, TimerToken,
+    AppLauncher, BoxConstraints, Color, Data, Env, Event, EventCtx, Layout, LayoutCtx, Lens,
+    LifeCycle, LifeCycleCtx, LocalizedString, PaintCtx, Rect, RenderContext, Selector, TimerToken,
     UpdateCtx, Widget, WidgetExt, WindowDesc,
 };
 
@@ -129,8 +129,8 @@ impl Widget<OurData> for ColorWell {
         }
     }
 
-    fn layout(&mut self, _: &mut LayoutCtx, bc: &BoxConstraints, _: &OurData, _: &Env) -> Size {
-        bc.max()
+    fn layout(&mut self, _: &mut LayoutCtx, bc: &BoxConstraints, _: &OurData, _: &Env) -> Layout {
+        bc.max().into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &OurData, _env: &Env) {

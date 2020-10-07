@@ -47,7 +47,7 @@ impl<T: Data, W: Widget<T>> Widget<T> for DebugInvalidation<T, W> {
         self.inner.update(ctx, old_data, data, env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         self.inner.layout(ctx, bc, data, env)
     }
 

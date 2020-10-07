@@ -22,8 +22,8 @@ use crate::kurbo::{Affine, Insets, Point, Rect, Shape, Size, Vec2};
 use crate::util::ExtendDrain;
 use crate::{
     ArcStr, BoxConstraints, Color, Command, Data, Env, Event, EventCtx, InternalEvent,
-    InternalLifeCycle, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Region, RenderContext, Target,
-    TextLayout, TimerToken, UpdateCtx, Widget, WidgetId,
+    InternalLifeCycle, Layout, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx, Region, RenderContext,
+    Target, TextLayout, TimerToken, UpdateCtx, Widget, WidgetId,
 };
 
 /// Our queue type
@@ -477,7 +477,7 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
         bc: &BoxConstraints,
         data: &T,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         self.state.needs_layout = false;
         self.state.is_expecting_set_origin_call = true;
 
@@ -493,7 +493,8 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
             mouse_pos: child_mouse_pos,
         };
 
-        let new_size = self.inner.layout(&mut child_ctx, bc, data, env);
+        let layout = self.inner.layout(&mut child_ctx, bc, data, env);
+        let new_size = layout.size();
         if new_size != prev_size {
             let mut child_ctx = LifeCycleCtx {
                 widget_state: child_ctx.widget_state,
@@ -507,7 +508,7 @@ impl<T: Data, W: Widget<T>> WidgetPod<T, W> {
         self.state.size = new_size;
         self.log_layout_issues(new_size);
 
-        new_size
+        layout
     }
 
     fn log_layout_issues(&self, size: Size) {

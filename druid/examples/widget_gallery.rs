@@ -318,7 +318,7 @@ impl<T: Data> Widget<T> for SquaresGrid<T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         let count = self.widgets.len() as f64;
         // The space needed to lay all elements out on a single line.
         let ideal_width = (self.cell_size.width + self.spacing + 1.0) * count;
@@ -377,7 +377,7 @@ impl<T: Data> Widget<T> for SquaresGrid<T> {
                 y_position += self.cell_size.height + self.spacing;
             }
         }
-        Size { width, height }
+        Layout::new((width, height))
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

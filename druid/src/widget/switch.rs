@@ -169,9 +169,10 @@ impl Widget<bool> for Switch {
         }
     }
 
-    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _: &bool, env: &Env) -> Size {
+    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _: &bool, env: &Env) -> Layout {
         let width = env.get(theme::BORDERED_WIDGET_HEIGHT) * SWITCH_WIDTH_RATIO;
         bc.constrain(Size::new(width, env.get(theme::BORDERED_WIDGET_HEIGHT)))
+            .into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &bool, env: &Env) {

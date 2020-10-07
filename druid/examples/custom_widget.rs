@@ -40,18 +40,18 @@ impl Widget<String> for CustomWidget {
 
     fn layout(
         &mut self,
-        _layout_ctx: &mut LayoutCtx,
+        _ctx: &mut LayoutCtx,
         bc: &BoxConstraints,
         _data: &String,
         _env: &Env,
-    ) -> Size {
+    ) -> Layout {
         // BoxConstraints are passed by the parent widget.
         // This method can return any Size within those constraints:
         // bc.constrain(my_size)
         //
         // To check if a dimension is infinite or not (e.g. scrolling):
         // bc.is_width_bounded() / bc.is_height_bounded()
-        bc.max()
+        bc.max().into()
     }
 
     // The paint method gets called last, after an event flow.

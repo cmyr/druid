@@ -45,12 +45,13 @@ impl Widget<f64> for ProgressBar {
         bc: &BoxConstraints,
         _data: &f64,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         bc.debug_check("ProgressBar");
         bc.constrain(Size::new(
             env.get(theme::WIDE_WIDGET_WIDTH),
             env.get(theme::BASIC_WIDGET_HEIGHT),
         ))
+        .into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &f64, env: &Env) {

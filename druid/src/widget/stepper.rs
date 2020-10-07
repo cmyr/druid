@@ -183,11 +183,12 @@ impl Widget<f64> for Stepper {
         bc: &BoxConstraints,
         _data: &f64,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         bc.constrain(Size::new(
             env.get(theme::BASIC_WIDGET_HEIGHT),
             env.get(theme::BORDERED_WIDGET_HEIGHT),
         ))
+        .into()
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: &Event, data: &mut f64, env: &Env) {

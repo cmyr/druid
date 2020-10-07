@@ -95,7 +95,7 @@ where
         })
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         let inner = &mut self.inner;
         self.lens
             .with(data, |data| inner.layout(ctx, bc, data, env))

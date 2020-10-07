@@ -13,7 +13,6 @@
 // limitations under the License.
 
 //! A button widget.
-
 use crate::widget::prelude::*;
 use crate::widget::{Click, ControllerHost, Label, LabelText};
 use crate::{theme, Affine, Data, Insets, LinearGradient, UnitPoint};
@@ -143,19 +142,20 @@ impl<T: Data> Widget<T> for Button<T> {
         bc: &BoxConstraints,
         data: &T,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         bc.debug_check("Button");
         let padding = Size::new(LABEL_INSETS.x_value(), LABEL_INSETS.y_value());
         let label_bc = bc.shrink(padding).loosen();
-        self.label_size = self.label.layout(layout_ctx, &label_bc, data, env);
+        self.label_size = self.label.layout(layout_ctx, &label_bc, data, env).size();
         // HACK: to make sure we look okay at default sizes when beside a textbox,
         // we make sure we will have at least the same height as the default textbox.
         let min_height = env.get(theme::BORDERED_WIDGET_HEIGHT);
 
-        bc.constrain(Size::new(
+        let size = bc.constrain(Size::new(
             self.label_size.width + padding.width,
             (self.label_size.height + padding.height).max(min_height),
-        ))
+        ));
+        Layout::new(size)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

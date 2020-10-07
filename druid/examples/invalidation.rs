@@ -127,8 +127,8 @@ impl Widget<Vector<Circle>> for CircleView {
         bc: &BoxConstraints,
         _data: &Vector<Circle>,
         _env: &Env,
-    ) -> Size {
-        bc.max()
+    ) -> Layout {
+        bc.max().into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &Vector<Circle>, _env: &Env) {

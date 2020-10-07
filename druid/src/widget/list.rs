@@ -20,12 +20,8 @@ use std::sync::Arc;
 #[cfg(feature = "im")]
 use crate::im::Vector;
 
-use crate::kurbo::{Point, Rect, Size};
-
-use crate::{
-    BoxConstraints, Data, Env, Event, EventCtx, LayoutCtx, LifeCycle, LifeCycleCtx, PaintCtx,
-    UpdateCtx, Widget, WidgetPod,
-};
+use crate::widget::prelude::*;
+use crate::{Data, Point, Rect, Size, WidgetPod};
 
 /// A list widget for a variable-size collection of items.
 pub struct List<T> {
@@ -234,7 +230,7 @@ impl<C: Data, T: ListIter<C>> Widget<T> for List<C> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         let mut width = bc.min().width;
         let mut y = 0.0;
 
@@ -251,7 +247,8 @@ impl<C: Data, T: ListIter<C>> Widget<T> for List<C> {
                 Size::new(bc.min().width, 0.0),
                 Size::new(bc.max().width, std::f64::INFINITY),
             );
-            let child_size = child.layout(ctx, &child_bc, child_data, env);
+            let child_layout = child.layout(ctx, &child_bc, child_data, env);
+            let child_size = child_layout.size();
             let rect = Rect::from_origin_size(Point::new(0.0, y), child_size);
             child.set_layout_rect(ctx, child_data, env, rect);
             paint_rect = paint_rect.union(child.paint_rect());
@@ -262,7 +259,7 @@ impl<C: Data, T: ListIter<C>> Widget<T> for List<C> {
         let my_size = bc.constrain(Size::new(width, y));
         let insets = paint_rect - Rect::ZERO.with_size(my_size);
         ctx.set_paint_insets(insets);
-        my_size
+        Layout::new(my_size)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

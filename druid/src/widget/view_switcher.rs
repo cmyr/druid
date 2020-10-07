@@ -85,14 +85,14 @@ impl<T: Data, U: Data> Widget<T> for ViewSwitcher<T, U> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         match self.active_child {
             Some(ref mut child) => {
-                let size = child.layout(ctx, bc, data, env);
-                child.set_layout_rect(ctx, data, env, size.to_rect());
-                size
+                let layout = child.layout(ctx, bc, data, env);
+                child.set_layout_rect(ctx, data, env, layout.size().to_rect());
+                layout
             }
-            None => bc.max(),
+            None => bc.max().into(),
         }
     }
 

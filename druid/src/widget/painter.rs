@@ -130,8 +130,8 @@ impl<T: Data> Widget<T> for Painter<T> {
             ctx.request_paint();
         }
     }
-    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _: &T, _: &Env) -> Size {
-        bc.max()
+    fn layout(&mut self, _ctx: &mut LayoutCtx, bc: &BoxConstraints, _: &T, _: &Env) -> Layout {
+        bc.max().into()
     }
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {
         (self.0)(ctx, data, env)

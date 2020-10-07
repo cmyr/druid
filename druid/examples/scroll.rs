@@ -50,9 +50,9 @@ impl<T: Data> Widget<T> for OverPainter {
 
     fn update(&mut self, _: &mut UpdateCtx, _: &T, _: &T, _: &Env) {}
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _: &T, _: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _: &T, _: &Env) -> Layout {
         ctx.set_paint_insets(INSETS);
-        bc.constrain(Size::new(100., 100.))
+        bc.constrain(Size::new(100., 100.)).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, _: &T, env: &Env) {

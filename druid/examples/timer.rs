@@ -71,11 +71,17 @@ impl Widget<u32> for TimerWidget {
         self.simple_box.update(ctx, data, env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &u32, env: &Env) -> Size {
-        let size = self.simple_box.layout(ctx, &bc.loosen(), data, env);
-        let rect = Rect::from_origin_size(self.pos, size);
+    fn layout(
+        &mut self,
+        ctx: &mut LayoutCtx,
+        bc: &BoxConstraints,
+        data: &u32,
+        env: &Env,
+    ) -> Layout {
+        let layout = self.simple_box.layout(ctx, &bc.loosen(), data, env);
+        let rect = Rect::from_origin_size(self.pos, layout.size());
         self.simple_box.set_layout_rect(ctx, data, env, rect);
-        bc.constrain((500.0, 500.0))
+        bc.constrain((500.0, 500.0)).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &u32, env: &Env) {
@@ -102,8 +108,8 @@ impl Widget<u32> for SimpleBox {
         bc: &BoxConstraints,
         _data: &u32,
         _env: &Env,
-    ) -> Size {
-        bc.constrain((50.0, 50.0))
+    ) -> Layout {
+        bc.constrain((50.0, 50.0)).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &u32, env: &Env) {

@@ -376,10 +376,11 @@ impl<TP: TabsPolicy> Widget<TabsState<TP>> for TabBar<TP> {
         bc: &BoxConstraints,
         data: &TabsState<TP>,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         let (mut major, mut minor) = (0., 0.);
         for (_, tab) in self.tabs.iter_mut() {
-            let size = tab.layout(ctx, bc, data, env);
+            let layout = tab.layout(ctx, bc, data, env);
+            let size = layout.size();
             tab.set_layout_rect(
                 ctx,
                 data,
@@ -399,7 +400,7 @@ impl<TP: TabsPolicy> Widget<TabsState<TP>> for TabBar<TP> {
         let wanted = self
             .axis
             .pack(f64::max(major, self.axis.major(bc.max())), minor);
-        bc.constrain(wanted)
+        bc.constrain(wanted).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &TabsState<TP>, env: &Env) {
@@ -668,15 +669,15 @@ impl<TP: TabsPolicy> Widget<TabsState<TP>> for TabsBody<TP> {
         bc: &BoxConstraints,
         data: &TabsState<TP>,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         let inner = &data.inner;
         // Laying out all children so events can be delivered to them.
         for child in self.child_pods() {
-            let size = child.layout(ctx, bc, inner, env);
-            child.set_layout_rect(ctx, inner, env, size.to_rect());
+            let layout = child.layout(ctx, bc, inner, env);
+            child.set_layout_rect(ctx, inner, env, layout.size().to_rect());
         }
 
-        bc.max()
+        bc.max().into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &TabsState<TP>, env: &Env) {
@@ -997,13 +998,13 @@ impl<TP: TabsPolicy> Widget<TP::Input> for Tabs<TP> {
         bc: &BoxConstraints,
         data: &TP::Input,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         if let TabsContent::Running { scope } = &mut self.content {
-            let size = scope.layout(ctx, bc, data, env);
-            scope.set_layout_rect(ctx, data, env, Rect::from_origin_size(Point::ORIGIN, size));
-            size
+            let layout = scope.layout(ctx, bc, data, env);
+            scope.set_layout_rect(ctx, data, env, layout.size().to_rect());
+            layout
         } else {
-            bc.min()
+            bc.min().into()
         }
     }
 

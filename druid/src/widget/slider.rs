@@ -119,15 +119,15 @@ impl Widget<f64> for Slider {
 
     fn layout(
         &mut self,
-        _layout_ctx: &mut LayoutCtx,
+        _ctx: &mut LayoutCtx,
         bc: &BoxConstraints,
         _data: &f64,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         bc.debug_check("Slider");
         let height = env.get(theme::BASIC_WIDGET_HEIGHT);
         let width = env.get(theme::WIDE_WIDGET_WIDTH);
-        bc.constrain((width, height))
+        bc.constrain((width, height)).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &f64, env: &Env) {

@@ -69,17 +69,23 @@ impl Widget<bool> for Checkbox {
         ctx.request_paint();
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &bool, env: &Env) -> Size {
+    fn layout(
+        &mut self,
+        ctx: &mut LayoutCtx,
+        bc: &BoxConstraints,
+        data: &bool,
+        env: &Env,
+    ) -> Layout {
         bc.debug_check("Checkbox");
         let x_padding = env.get(theme::WIDGET_CONTROL_COMPONENT_PADDING);
         let check_size = env.get(theme::BASIC_WIDGET_HEIGHT);
         let label_size = self.child_label.layout(ctx, &bc, data, env);
 
         let desired_size = Size::new(
-            check_size + x_padding + label_size.width,
-            check_size.max(label_size.height),
+            check_size + x_padding + label_size.size().width,
+            check_size.max(label_size.size().height),
         );
-        bc.constrain(desired_size)
+        bc.constrain(desired_size).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &bool, env: &Env) {

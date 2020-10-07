@@ -70,7 +70,7 @@ impl<T: FromStr + Display + Data, W: Widget<String>> Widget<Option<T>> for Parse
         bc: &BoxConstraints,
         _data: &Option<T>,
         env: &Env,
-    ) -> Size {
+    ) -> Layout {
         self.widget.layout(ctx, bc, &self.state, env)
     }
 

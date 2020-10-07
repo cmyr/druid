@@ -72,8 +72,8 @@ impl Widget<MyColor> for ColorWell {
         }
     }
 
-    fn layout(&mut self, _: &mut LayoutCtx, bc: &BoxConstraints, _: &MyColor, _: &Env) -> Size {
-        bc.max()
+    fn layout(&mut self, _: &mut LayoutCtx, bc: &BoxConstraints, _: &MyColor, _: &Env) -> Layout {
+        bc.max().into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &MyColor, _env: &Env) {

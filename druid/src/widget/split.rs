@@ -326,7 +326,7 @@ impl<T: Data> Widget<T> for Split<T> {
         self.child2.update(ctx, &data, env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         bc.debug_check("Split");
 
         match self.split_axis {
@@ -398,29 +398,29 @@ impl<T: Data> Widget<T> for Split<T> {
                 )
             }
         };
-        let child1_size = self.child1.layout(ctx, &child1_bc, &data, env);
-        let child2_size = self.child2.layout(ctx, &child2_bc, &data, env);
+        let child1_layout = self.child1.layout(ctx, &child1_bc, &data, env);
+        let child2_layout = self.child2.layout(ctx, &child2_bc, &data, env);
 
         // Top-left align for both children, out of laziness.
         // Reduce our unsplit direction to the larger of the two widgets
         let (child1_rect, child2_rect) = match self.split_axis {
             Axis::Horizontal => {
-                my_size.height = child1_size.height.max(child2_size.height);
+                my_size.height = child1_layout.height().max(child2_layout.height());
                 (
-                    Rect::from_origin_size(Point::ORIGIN, child1_size),
+                    child1_layout.size().to_rect(),
                     Rect::from_origin_size(
-                        Point::new(child1_size.width + bar_area, 0.0),
-                        child2_size,
+                        Point::new(child1_layout.width() + bar_area, 0.0),
+                        child2_layout.size(),
                     ),
                 )
             }
             Axis::Vertical => {
-                my_size.width = child1_size.width.max(child2_size.width);
+                my_size.width = child1_layout.width().max(child2_layout.width());
                 (
-                    Rect::from_origin_size(Point::ORIGIN, child1_size),
+                    child1_layout.size().to_rect(),
                     Rect::from_origin_size(
-                        Point::new(0.0, child1_size.height + bar_area),
-                        child2_size,
+                        Point::new(0.0, child2_layout.height() + bar_area),
+                        child2_layout.size(),
                     ),
                 )
             }
@@ -432,7 +432,7 @@ impl<T: Data> Widget<T> for Split<T> {
         let insets = paint_rect - Rect::ZERO.with_size(my_size);
         ctx.set_paint_insets(insets);
 
-        my_size
+        Layout::new(my_size)
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

@@ -267,7 +267,7 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, _data: &T, env: &Env) -> Layout {
         self.placeholder.rebuild_if_needed(ctx.text(), env);
         if self.multiline {
             self.editor
@@ -282,7 +282,7 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
         let text_height = size.height + TEXT_INSETS.y_value();
         let height = text_height.max(min_height);
 
-        bc.constrain((width, height))
+        bc.constrain((width, height)).into()
     }
 
     fn paint(&mut self, ctx: &mut PaintCtx, data: &T, env: &Env) {

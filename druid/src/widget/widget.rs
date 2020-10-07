@@ -167,7 +167,7 @@ pub trait Widget<T> {
     ///
     /// [`WidgetPod::layout`]: struct.WidgetPod.html#method.layout
     /// [`set_origin`]: struct.WidgetPod.html#method.set_origin
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size;
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout;
 
     /// Paint the widget appearance.
     ///
@@ -247,7 +247,7 @@ impl<T> Widget<T> for Box<dyn Widget<T>> {
         self.deref_mut().update(ctx, old_data, data, env);
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         self.deref_mut().layout(ctx, bc, data, env)
     }
 

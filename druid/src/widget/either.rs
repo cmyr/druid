@@ -74,19 +74,21 @@ impl<T: Data> Widget<T> for Either<T> {
         }
     }
 
-    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Size {
+    fn layout(&mut self, ctx: &mut LayoutCtx, bc: &BoxConstraints, data: &T, env: &Env) -> Layout {
         if self.current {
-            let size = self.true_branch.layout(ctx, bc, data, env);
+            let layout = self.true_branch.layout(ctx, bc, data, env);
+            let size = layout.size();
             self.true_branch
                 .set_layout_rect(ctx, data, env, size.to_rect());
             ctx.set_paint_insets(self.true_branch.paint_insets());
-            size
+            layout
         } else {
-            let size = self.false_branch.layout(ctx, bc, data, env);
+            let layout = self.false_branch.layout(ctx, bc, data, env);
+            let size = layout.size();
             self.false_branch
                 .set_layout_rect(ctx, data, env, size.to_rect());
             ctx.set_paint_insets(self.true_branch.paint_insets());
-            size
+            layout
         }
     }
 
