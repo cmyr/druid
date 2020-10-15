@@ -21,12 +21,12 @@ use crate::{Color, Data, Key};
 /// This is useful in a situation where layout is controlled elsewhere and you
 /// do not need to handle events, but you would like to customize appearance.
 ///
+/// A `Painter` can be used as the [`background`] of a [`Container`].
+///
 /// **When is paint called?**
 ///
 /// The `Painter` widget will call its [`paint`]  method anytime its [`Data`]
-/// is changed. If you would like it to repaint at other times (such as when
-/// hot or active state changes) you will need to call [`request_paint`] further
-/// up the tree, perhaps in a [`Controller`] widget.
+/// is changed, or if hot or focus state changes.
 ///
 /// # Examples
 ///
@@ -75,6 +75,8 @@ use crate::{Color, Data, Key};
 /// [`Data`]: ../trait.Data.html
 /// [`request_paint`]: ../EventCtx.html#method.request_paint
 /// [`Controller`]: trait.Controller.html
+/// [`background`]: Container::background
+/// [`Container`]: Container
 pub struct Painter<T>(Box<dyn FnMut(&mut PaintCtx, &T, &Env)>);
 
 /// Something that can be used as the background for a widget.
@@ -120,11 +122,26 @@ impl<T: Data> BackgroundBrush<T> {
             Self::Painter(painter) => painter.paint(ctx, data, env),
         }
     }
+
+    /// Returns `true` if this brush does dynamic painting.
+    ///
+    /// That is, if this is a [`Painter`] widget.
+    ///
+    /// Containers can use this to decide whether they should request paint when
+    /// things like focus or hot status change.
+    pub fn is_dynamic(&self) -> bool {
+        matches!(self, BackgroundBrush::Painter(_))
+    }
 }
 
 impl<T: Data> Widget<T> for Painter<T> {
     fn event(&mut self, _: &mut EventCtx, _: &Event, _: &mut T, _: &Env) {}
-    fn lifecycle(&mut self, _: &mut LifeCycleCtx, _: &LifeCycle, _: &T, _: &Env) {}
+    fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, _: &T, _: &Env) {
+        dbg!(event);
+        if matches!(event, LifeCycle::HotChanged(_) | LifeCycle::FocusChanged(_)) {
+            ctx.request_paint();
+        }
+    }
     fn update(&mut self, ctx: &mut UpdateCtx, old: &T, new: &T, _: &Env) {
         if !old.same(new) {
             ctx.request_paint();

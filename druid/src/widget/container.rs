@@ -135,6 +135,19 @@ impl<T: Data> Widget<T> for Container<T> {
     }
 
     fn lifecycle(&mut self, ctx: &mut LifeCycleCtx, event: &LifeCycle, data: &T, env: &Env) {
+        // redraw `Painter` if hot/focus changed.
+        // If the painter were being used as a normal widget this would be unnecessary,
+        // but it isn't; we aren't sending it events.
+        if self
+            .background
+            .as_ref()
+            .map(BackgroundBrush::is_dynamic)
+            .unwrap_or(false)
+        {
+            if matches!(event, LifeCycle::HotChanged(_) | LifeCycle::FocusChanged(_)) {
+                ctx.request_paint();
+            }
+        }
         self.inner.lifecycle(ctx, event, data, env)
     }
 
