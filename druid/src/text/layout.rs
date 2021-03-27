@@ -201,6 +201,13 @@ impl<T: TextStorage> TextLayout<T> {
         self.text.as_ref()
     }
 
+    /// Return `true` if `other` is the [`same`] as the layout's current text.
+    ///
+    /// [`same`]: crate::Data::same
+    pub fn text_is_same(&self, other: &T) -> bool {
+        self.text.as_ref().map(|t| t.same(other)).unwrap_or(false)
+    }
+
     /// Returns the inner Piet [`TextLayout`] type.
     ///
     /// [`TextLayout`]: ./piet/trait.TextLayout.html

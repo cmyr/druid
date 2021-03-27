@@ -19,6 +19,7 @@ use tracing::{instrument, trace};
 
 use crate::kurbo::Insets;
 use crate::piet::TextLayout as _;
+use crate::shell::text::Action as ImeAction;
 use crate::text::{EditableText, Selection, TextComponent, TextLayout, TextStorage};
 use crate::widget::prelude::*;
 use crate::widget::{Padding, Scroll, WidgetWrapper};
@@ -91,7 +92,7 @@ impl<T: EditableText + TextStorage> TextBox<T> {
         this.inner
             .wrapped_mut()
             .set_enabled_scrollbars(crate::scroll_component::ScrollbarsEnabled::Both);
-        this.text_mut().borrow_mut().set_accepts_newlines(true);
+        this.text_mut().set_accepts_newlines(true);
         this.inner
             .wrapped_mut()
             .set_horizontal_scroll_enabled(false);
@@ -194,10 +195,7 @@ impl<T> TextBox<T> {
         }
 
         let size = size.into();
-        self.text_mut()
-            .borrow_mut()
-            .layout
-            .set_text_size(size.clone());
+        self.text_mut().set_text_size(size.clone());
         self.placeholder.set_text_size(size);
     }
 
@@ -215,7 +213,7 @@ impl<T> TextBox<T> {
             return;
         }
         let font = font.into();
-        self.text_mut().borrow_mut().layout.set_font(font.clone());
+        self.text_mut().set_font(font.clone());
         self.placeholder.set_font(font);
     }
 
@@ -242,7 +240,7 @@ impl<T> TextBox<T> {
             tracing::warn!("set_text_alignment called with IME lock held.");
             return;
         }
-        self.text_mut().borrow_mut().set_text_alignment(alignment);
+        self.text_mut().set_text_alignment(alignment);
     }
 
     /// Set the text color.
@@ -259,7 +257,7 @@ impl<T> TextBox<T> {
             tracing::warn!("set_text_color calld with IME lock held.");
             return;
         }
-        self.text_mut().borrow_mut().layout.set_text_color(color);
+        self.text_mut().set_text_color(color.into());
     }
 
     /// The point, relative to the origin, where this text box draws its
@@ -392,8 +390,17 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
                 if self.text().can_write() && ctx.is_focused() && cmd.is(crate::commands::CUT) =>
             {
                 if self.text().borrow().set_clipboard() {
-                    let inval = self.text_mut().borrow_mut().insert_text(data, "");
-                    ctx.invalidate_text_input(inval);
+                    let cmd = TextComponent::INSERT_TEXT
+                        .with("".into())
+                        .to(ctx.window_id());
+                    self.inner.event(ctx, &Event::Command(cmd), data, env);
+
+                    //if let Some(inval) = self
+                    //.text_mut()
+                    //.with_session_mut(data, |session| session.insert_text(""))
+                    //{
+                    //ctx.invalidate_text_input(inval);
+                    //}
                 }
                 ctx.set_handled();
             }
@@ -405,8 +412,17 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
                         string.lines().next().unwrap_or("")
                     };
                     if !text.is_empty() {
-                        let inval = self.text_mut().borrow_mut().insert_text(data, text);
-                        ctx.invalidate_text_input(inval);
+                        let cmd = TextComponent::INSERT_TEXT
+                            .with("".into())
+                            .to(ctx.window_id());
+                        self.inner.event(ctx, &Event::Command(cmd), data, env);
+
+                        //if let Some(inval) = self
+                        //.text_mut()
+                        //.with_session_mut(data, |session| session.insert_text(text))
+                        //{
+                        //ctx.invalidate_text_input(inval);
+                        //}
                     }
                 }
             }
@@ -425,9 +441,13 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
             }
             LifeCycle::FocusChanged(true) => {
                 if self.text().can_write() && !self.multiline && !self.was_focused_from_click {
-                    let selection = Selection::new(0, data.len());
-                    let _ = self.text_mut().borrow_mut().set_selection(selection);
-                    ctx.invalidate_text_input(druid_shell::text::Event::SelectionChanged);
+                    let cmd = TextComponent::PERFORM_ACTION
+                        .with(ImeAction::SelectAll)
+                        .to(self.text().id());
+                    ctx.submit_command(cmd);
+                    //let selection = Selection::new(0, data.len());
+                    //let _ = self.text_mut().borrow_mut().set_selection(selection);
+                    //ctx.invalidate_text_input(druid_shell::text::Event::SelectionChanged);
                 }
                 self.inner.wrapped_mut().child_mut().has_focus = true;
                 self.reset_cursor_blink(ctx.request_timer(CURSOR_BLINK_DURATION));
@@ -437,9 +457,13 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
             LifeCycle::FocusChanged(false) => {
                 if self.text().can_write() && MAC_OR_LINUX && !self.multiline {
                     let selection = self.text().borrow().selection();
-                    let selection = Selection::new(selection.active, selection.active);
-                    let _ = self.text_mut().borrow_mut().set_selection(selection);
-                    ctx.invalidate_text_input(druid_shell::text::Event::SelectionChanged);
+                    let selection = Selection::caret(selection.active);
+                    let cmd = TextComponent::SET_SELECTION
+                        .with(selection)
+                        .to(self.text().id());
+                    ctx.submit_command(cmd);
+                    //let _ = self.text_mut().borrow_mut().set_selection(selection);
+                    //ctx.invalidate_text_input(druid_shell::text::Event::SelectionChanged);
                 }
                 self.inner.wrapped_mut().child_mut().has_focus = false;
                 self.cursor_timer = TimerToken::INVALID;
@@ -458,8 +482,7 @@ impl<T: TextStorage + EditableText> Widget<T> for TextBox<T> {
             ctx.request_layout();
         }
         if self.text().can_write() {
-            if let Some(ime_invalidation) = self.text_mut().borrow_mut().pending_ime_invalidation()
-            {
+            if let Some(ime_invalidation) = self.text_mut().pending_ime_invalidation() {
                 ctx.invalidate_text_input(ime_invalidation);
             }
         }

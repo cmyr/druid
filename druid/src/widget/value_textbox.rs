@@ -17,6 +17,7 @@
 use tracing::instrument;
 
 use super::TextBox;
+use crate::shell::text::Action as ImeAction;
 use crate::text::{
     format::{Formatter, ValidationError},
     Selection, TextComponent,
@@ -107,8 +108,8 @@ impl<T: Data> ValueTextBox<T> {
     /// [`TextBox`]: crate::widget::TextBox
     /// [`Formatter`]: crate::text::format::Formatter
     pub fn new(mut inner: TextBox<String>, formatter: impl Formatter<T> + 'static) -> Self {
-        inner.text_mut().borrow_mut().send_notification_on_return = true;
-        inner.text_mut().borrow_mut().send_notification_on_cancel = true;
+        inner.text_mut().send_notification_on_return = true;
+        inner.text_mut().send_notification_on_cancel = true;
         inner.handles_tab_notifications = false;
         ValueTextBox {
             inner,
@@ -163,14 +164,18 @@ impl<T: Data> ValueTextBox<T> {
             }
             Err(err) => {
                 if self.inner.text().can_write() {
-                    if let Some(inval) = self
-                        .inner
-                        .text_mut()
-                        .borrow_mut()
-                        .set_selection(Selection::new(0, self.buffer.len()))
-                    {
-                        ctx.invalidate_text_input(inval);
-                    }
+                    let cmd = TextComponent::PERFORM_ACTION
+                        .with(ImeAction::SelectAll)
+                        .to(self.inner.text().id());
+                    ctx.submit_command(cmd);
+                    //if let Some(inval) = self
+                    //.inner
+                    //.text_mut()
+                    //.borrow_mut()
+                    //.set_selection(Selection::new(0, self.buffer.len()))
+                    //{
+                    //ctx.invalidate_text_input(inval);
+                    //}
                 }
                 self.send_event(ctx, TextBoxEvent::Invalid(err));
                 // our content isn't valid
@@ -357,11 +362,15 @@ impl<T: Data + std::fmt::Debug> Widget<T> for ValueTextBox<T> {
     )]
     fn update(&mut self, ctx: &mut UpdateCtx, old: &T, data: &T, env: &Env) {
         if let Some(sel) = self.force_selection.take() {
-            if self.inner.text().can_write() {
-                if let Some(change) = self.inner.text_mut().borrow_mut().set_selection(sel) {
-                    ctx.invalidate_text_input(change);
-                }
-            }
+            //if self.inner.text().can_write() {
+            let cmd = TextComponent::SET_SELECTION
+                .with(sel)
+                .to(self.inner.text().id());
+            ctx.submit_command(cmd);
+            //if let Some(change) = self.inner.text_mut().borrow_mut().set_selection(sel) {
+            //ctx.invalidate_text_input(change);
+            //}
+            //}
         }
         let changed_by_us = self
             .last_known_data
